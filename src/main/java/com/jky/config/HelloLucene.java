@@ -15,6 +15,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -27,6 +28,8 @@ import java.io.FileReader;
 @Component
 public class HelloLucene {
 
+    @Value("${lucene.filepath}")
+    private String lucenePath;
     /**
      * 建立索引
      */
@@ -35,14 +38,14 @@ public class HelloLucene {
         try {
             // 1、创建Directory
             Directory directory = new RAMDirectory(); // 创建内存的索引对象
-            Directory directory1 = FSDirectory.open(new File("E:/lucene/index01")); // 创建再在硬盘上
+            Directory directory1 = FSDirectory.open(new File(lucenePath + "index01")); // 创建再在硬盘上
             // 2、创建IndexWriter
             IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35));
             writer = new IndexWriter(directory1, iwc);
             // 3、创建Document对象
             Document doc = null;
             // 4、为Document添加Field
-            File f = new File("E:/lucene/example");
+            File f = new File(lucenePath + "example");
             for (File file : f.listFiles()) {
                 doc = new Document();
                 doc.add(new Field("content", new FileReader(file)));
@@ -68,7 +71,7 @@ public class HelloLucene {
     public void searcher() {
         try {
             // 1、创建Directory
-            Directory directory = FSDirectory.open(new File("E:/lucene/index01"));
+            Directory directory = FSDirectory.open(new File(lucenePath + "index01"));
             // 2、创建IndexReader
             IndexReader reader = IndexReader.open(directory);
             // 3、根据IndexReader创建IndexSearcher
@@ -77,7 +80,7 @@ public class HelloLucene {
             // 4.1 创建parser来确定要搜索文件的内容,第二个参数表示搜索的域
             QueryParser parser = new QueryParser(Version.LUCENE_35, "content", new StandardAnalyzer(Version.LUCENE_35));
             // 4.2 创建query,表示搜索的域为content中包含mysql的文档
-            Query query = parser.parse("mysql");
+            Query query = parser.parse("com");
             // 5、根据seacher搜索并且返回TopDocs
             TopDocs tds = searcher.search(query, 10);
             // 6、根据TopDoc获取ScoreDoc对象

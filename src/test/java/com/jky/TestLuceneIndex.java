@@ -21,4 +21,9 @@ public class TestLuceneIndex {
     public void testIndex() {
         indexUtil.index();
     }
+
+    @Test
+    public void testQuery() {
+        indexUtil.query();
+    }
 }

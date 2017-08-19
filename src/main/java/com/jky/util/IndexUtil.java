@@ -3,11 +3,13 @@ package com.jky.util;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -33,12 +35,30 @@ public class IndexUtil {
     private int[] attachs = {2,3,4,5,4,2};
     private String[] names = {"zhangsan","lisi","john","jetty","make","jack"};
 
-    private static Directory directory = null;
+    /**
+     * 获取文件的基础路径
+     */
+    @Value("${lucene.filepath}")
+    private String lucenePath;
 
-    // 静态块创建Directory对象
-    static {
+    public Directory directory = null;
+
+    public IndexUtil(){
         try {
-            directory = FSDirectory.open(new File("E:/lucene/index02"));
+            directory = FSDirectory.open(new File("C:/lucene/index02"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     *
+     */
+    public void query() {
+        try {
+            IndexReader reader = IndexReader.open(directory);
+            System.out.println("numDocs:"+reader.numDocs());
+            System.out.println("maxDocs:"+reader.maxDoc());
         } catch (Exception e) {
             e.printStackTrace();
         }
