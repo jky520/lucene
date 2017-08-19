@@ -20,11 +20,35 @@ public class TestLuceneIndex {
     @Test
     public void testIndex() {
         indexUtil.index();
-        System.out.println();
     }
 
     @Test
     public void testQuery() {
         indexUtil.query();
+    }
+
+    @Test
+    public void testDelete() {
+        indexUtil.delete();
+    }
+
+    @Test
+    public void testUnDelete() {
+        indexUtil.undelete();
+    }
+
+    @Test
+    public void testForceDelete() {
+        indexUtil.forceDelete();
+    }
+
+    @Test
+    public void testMerge() {
+        indexUtil.merge();
+    }
+
+    @Test
+    public void testUpdate() {
+        indexUtil.update();
     }
 }

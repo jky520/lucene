@@ -8,17 +8,63 @@
     </dependency>
     
     二、在全文索引工具中，都是由这三部分组成
-        1、索引部分(I am a boy)
+        1、索引部分(I am DT人)
         2、分词部分
         3、搜索部分
     三、索引的基本概念
     四、索引的过程
     五、索引建立的步骤
         5.1、创建Directory
+            public IndexUtil(){
+                try {
+                    directory = FSDirectory.open(new File("C:/lucene/index02"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         5.2、创建Writer
-        5.3、创建文档并且添加索引
+            IndexWriter writer = null;
+                try {
+                    writer = new IndexWriter(directory,
+                            new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35)));
+        5.3、创建文档并且添加索引与（文档和域的概念）
+            文档相当于表中的每一条记录，域相当于表的每一个字段
+            先创建文档再添加域，域的存储选项和域的索引选项均需要设置
         5.4、查询索引的基本信息
         5.5、删除和更新索引
+            5.5.1 删除
+                writer = new IndexWriter(directory,
+                        new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35)));
+                // 参数是一个选项，可以是一个Query,也可以是一个term，term是一个精确查找的值
+                // 此时删除的文档不会被完全的删除，而是存储在一个回收站中，可以恢复
+                writer.deleteDocuments(new Term("id","1")); // 删除id为1的文档
+            5.5.2 恢复删除
+               // 恢复时，必须把IndexReader的只读设置为false
+               reader = IndexReader.open(directory, false);
+               reader.undeleteAll();
+            5.5.3 强制删除
+                writer = new IndexWriter(directory,
+                        new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35)));
+                writer.forceMergeDeletes();
+            5.5.4 合并优化（不建议使用）
+                 writer = new IndexWriter(directory,
+                        new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35)));
+                 // 会将索引合并为两段，这两段中的被删除的数据会被清空
+                 // 特别注意：此处Lucenez在3.5之后不建议使用，因为会消耗大量的开销，Lucene会根据情况自动处理
+                 writer.forceMerge(2);
+            5.5.5 更新
+                writer = new IndexWriter(directory,
+                        new IndexWriterConfig(Version.LUCENE_35, new StandardAnalyzer(Version.LUCENE_35)));
+                /**
+                 * Lucene并没有提供更新方法，这里的更新操作其实是如下两个操作的合并
+                 * 先删除后添加
+                 */
+                Document doc = new Document();
+                doc.add(new Field("id", "11", Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+                doc.add(new Field("email", emails[0], Field.Store.YES, Field.Index.NOT_ANALYZED));
+                doc.add(new Field("content", content[0], Field.Store.NO, Field.Index.ANALYZED));
+                doc.add(new Field("name", names[0], Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+                writer.updateDocument(new Term("id", "1"), doc);
     六、域选项
         6.1、域索引选项
             Field.Index.*

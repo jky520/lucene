@@ -1,5 +1,6 @@
 package com.jky.config;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -48,6 +49,8 @@ public class HelloLucene {
             File f = new File(lucenePath + "example");
             for (File file : f.listFiles()) {
                 doc = new Document();
+                String content = FileUtils.readFileToString(file); // 可以把文件的内容一行一行的读取出来,此处没任何意义
+                System.out.println(content);
                 doc.add(new Field("content", new FileReader(file)));
                 doc.add(new Field("filename", file.getName(), Field.Store.YES, Field.Index.NOT_ANALYZED));
                 doc.add(new Field("path", file.getAbsolutePath(), Field.Store.YES, Field.Index.NOT_ANALYZED));
