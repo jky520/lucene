@@ -20,6 +20,7 @@ public class TestLuceneIndex {
     @Test
     public void testIndex() {
         indexUtil.index();
+        System.out.println();
     }
 
     @Test
