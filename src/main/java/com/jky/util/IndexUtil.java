@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * lucene创建索引的工具类
@@ -24,7 +26,8 @@ import java.io.File;
 public class IndexUtil {
 
     private String[] ids = {"1", "2", "3", "4", "5", "6"};
-    private String[] emails = {"aa@jky.com","bb@jky.com","cc@jky.com","jky1988@qq.com","jky818@163.com","jwj1998@163.com"};
+    private String[] emails = {"aa@" +
+            "","bb@jky.com","cc@jky.com","jky1988@qq.com","jky818@163.com","jwj1998@163.com"};
     private String[] content = {
             "welcome to visited myspace",
             "hello boy",
@@ -44,8 +47,14 @@ public class IndexUtil {
 
     public Directory directory = null;
 
+    /**
+     * 存放加权数据的参数
+     */
+    private Map<String, Float> scores = new HashMap<String, Float>();
+
     public IndexUtil(){
         try {
+            //scores.put()
             directory = FSDirectory.open(new File("C:/lucene/index02"));
         } catch (Exception e) {
             e.printStackTrace();
