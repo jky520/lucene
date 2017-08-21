@@ -2,6 +2,10 @@ package com.jky;
 
 import com.jky.util.IndexUtil2;
 import com.jky.util.SearcherUtil;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.util.Version;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,5 +61,36 @@ public class TestSearcher {
     @Test
     public void  testSearchByBoolean() {
         searcherUtil.searchByBoolean(10);
+    }
+
+    @Test
+    public void  testSearchByPhrase() {
+        searcherUtil.searchByPhrase(10);
+    }
+
+    @Test
+    public void  testSearchByFuzzy() {
+        searcherUtil.searchByFuzzy("name", "make", 10);
+    }
+
+    @Test
+    public void testSearchByQueryParse() {
+        try {
+            // 创建QueryParse的对象,默认的搜素域是content,可以修改
+            QueryParser parser = new QueryParser(Version.LUCENE_35, "content", new StandardAnalyzer(Version.LUCENE_35));
+            // 改变空格的默认操作符变成AND，表示既有也有
+            // parser.setDefaultOperator(QueryParser.Operator.AND);
+            // 搜索的content中包含有like的
+            Query query = parser.parse("like");
+            // 有football或者basketball的，空格默认就是OR
+            query = parser.parse("football basketball");
+            // 这种方式可以改变搜索域name的值为like
+            //query = parser.parse("name:like");
+
+            //query = parser.parse("email:j*");
+            searcherUtil.searchByQueryParse(query, 10);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

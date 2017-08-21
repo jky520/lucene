@@ -184,17 +184,33 @@
                 // 在传入的value中可以使用通配符*和?,其中？表示匹配一个字符，*表示匹配人一个字符
                 Query query = new WildcardQuery(new Term(field, value));
                 TopDocs tds = searcher.search(query, num);
-            8.2.5、BooleanQuery
+            8.2.5、BooleanQuery（连接条件查询）
                 *可以连接多个条件
-                Occur.MUST 表示必须的、Occur.SHOULD 不是可有可无、Occur.MUST_NOT
                 IndexSearcher searcher = getSearcher();
                 BooleanQuery query = new BooleanQuery();
-                // 下面两个就是两个条件
+                /**
+                 * BooleanQuery 可以连接多个子查询
+                 * Occur.MUST 表示必须的，相当于数据库的and
+                 * Occur.SHOULD 表示可以有，相当于数据库的or
+                 * Occur.MUST_NOT 表示不能有，相当于非
+                 */
                 query.add(new TermQuery(new Term("name", "zhangsan")), BooleanClause.Occur.MUST);
-                query.add(new TermQuery(new Term("content", "like")), BooleanClause.Occur.MUST);
+                query.add(new TermQuery(new Term("content", "like")), BooleanClause.Occur.MUST_NOT);
                 TopDocs tds = searcher.search(query, num);
-            8.2.6、phraseQuery
-            8.2.7、FuzzyQuery
+            8.2.6、phraseQuery（短语查询）
+                IndexSearcher searcher = getSearcher();
+                PhraseQuery query = new PhraseQuery();
+                query.setSlop(1); // 设置跳数
+                // 第一个Term,term的值会自动转换成小写，这点值得注意一下
+                query.add(new Term("content", "i"));
+                // 产生距离之后的第二个Term
+                query.add(new Term("content", "basketball"));
+                TopDocs tds = searcher.search(query, num);
+            8.2.7、FuzzyQuery（模糊查询）
+                IndexSearcher searcher = getSearcher();
+                // 0.4f,0是相似度的值，有时间去研究研究
+                FuzzyQuery query = new FuzzyQuery(new Term(field, value),0.4f, 0);
+                TopDocs tds = searcher.search(query, num);
         8.3、Queryparser
             8.3.1、指定项查找
             8.3.1、指定范围查找

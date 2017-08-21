@@ -8,6 +8,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
@@ -71,8 +72,11 @@ public class SearcherUtil {
         return null;
     }
 
-    /***
+    /**
      * 精确匹配查询方法
+     * @param field
+     * @param name
+     * @param num
      */
     public void searchByTerm(String field, String name, int num) {
         try {
@@ -93,6 +97,10 @@ public class SearcherUtil {
 
     /**
      * 基于范围的查询
+     * @param field
+     * @param start
+     * @param end
+     * @param num
      */
     public void searchByTermRange(String field, String start, String end, int num){
         try {
@@ -183,12 +191,91 @@ public class SearcherUtil {
         }
     }
 
+    /**
+     * 连接条件查询
+     * @param num
+     */
     public void searchByBoolean(int num) {
         try {
             IndexSearcher searcher = getSearcher();
             BooleanQuery query = new BooleanQuery();
+            /**
+             * Occur.MUST 表示必须的，相当于数据库的and
+             * Occur.SHOULD 表示可以有，相当于数据库的or
+             * Occur.MUST_NOT 表示不能有，相当于非
+             */
             query.add(new TermQuery(new Term("name", "zhangsan")), BooleanClause.Occur.MUST);
             query.add(new TermQuery(new Term("content", "like")), BooleanClause.Occur.MUST_NOT);
+            TopDocs tds = searcher.search(query, num);
+            System.out.println("一共查询了："+ tds.totalHits);
+            for (ScoreDoc sd : tds.scoreDocs) {
+                Document doc = searcher.doc(sd.doc);
+                System.out.println(doc.get("id") +"----------------"+ "[" +doc.get("email")+ "]===>" + doc.get("id") +
+                        doc.get("attach") + "," + doc.get("date"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 短语查询的方法
+     * @param num
+     */
+    public void searchByPhrase(int num) {
+        try {
+            IndexSearcher searcher = getSearcher();
+            PhraseQuery query = new PhraseQuery();
+            query.setSlop(1); // 设置跳数
+            // 第一个Term,term的值会自动转换成小写，这点值得注意一下
+            query.add(new Term("content", "i"));
+            // 产生距离之后的第二个Term
+            query.add(new Term("content", "basketball"));
+            TopDocs tds = searcher.search(query, num);
+            System.out.println("一共查询了："+ tds.totalHits);
+            for (ScoreDoc sd : tds.scoreDocs) {
+                Document doc = searcher.doc(sd.doc);
+                System.out.println(doc.get("id") +"----------------"+ "[" +doc.get("email")+ "]===>" + doc.get("id") +
+                        doc.get("attach") + "," + doc.get("date"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 模糊查询方法
+     * @param field
+     * @param value
+     * @param num
+     */
+    public void searchByFuzzy(String field, String value, int num) {
+        try {
+            IndexSearcher searcher = getSearcher();
+            FuzzyQuery query = new FuzzyQuery(new Term(field, value),0.4f, 0);
+            TopDocs tds = searcher.search(query, num);
+            System.out.println("一共查询了："+ tds.totalHits);
+            for (ScoreDoc sd : tds.scoreDocs) {
+                Document doc = searcher.doc(sd.doc);
+                System.out.println(doc.get("id") +"----------------"+ "[" +doc.get("email")+ "]===>" + doc.get("id") +
+                        doc.get("attach") + "," + doc.get("date"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 基于字符串的查找方法
+     * @param query
+     * @param num
+     */
+    public void searchByQueryParse(Query query, int num) {
+        try {
+            IndexSearcher searcher = getSearcher();
             TopDocs tds = searcher.search(query, num);
             System.out.println("一共查询了："+ tds.totalHits);
             for (ScoreDoc sd : tds.scoreDocs) {
