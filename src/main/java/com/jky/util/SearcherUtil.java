@@ -136,6 +136,72 @@ public class SearcherUtil {
         }
     }
 
+    /**
+     * 前缀搜索方法
+     * @param field
+     * @param value
+     * @param num
+     */
+    public void searchByPrefix(String field, String value, int num) {
+        try {
+            IndexSearcher searcher = getSearcher();
+            Query query = new PrefixQuery(new Term(field, value));
+            TopDocs tds = searcher.search(query, num);
+            System.out.println("一共查询了："+ tds.totalHits);
+            for (ScoreDoc sd : tds.scoreDocs) {
+                Document doc = searcher.doc(sd.doc);
+                System.out.println(doc.get("id") +"----------------"+ "[" +doc.get("email")+ "]===>" + doc.get("id") +
+                        doc.get("attach") + "," + doc.get("date"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 通配符搜索
+     * @param field
+     * @param value
+     * @param num
+     */
+    public void searchByWildcard(String field, String value, int num) {
+        try {
+            IndexSearcher searcher = getSearcher();
+            // 在传入的value中可以使用通配符*和?,其中？表示匹配一个字符，*表示匹配人一个字符
+            Query query = new WildcardQuery(new Term(field, value));
+            TopDocs tds = searcher.search(query, num);
+            System.out.println("一共查询了："+ tds.totalHits);
+            for (ScoreDoc sd : tds.scoreDocs) {
+                Document doc = searcher.doc(sd.doc);
+                System.out.println(doc.get("id") +"----------------"+ "[" +doc.get("email")+ "]===>" + doc.get("id") +
+                        doc.get("attach") + "," + doc.get("date"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void searchByBoolean(int num) {
+        try {
+            IndexSearcher searcher = getSearcher();
+            BooleanQuery query = new BooleanQuery();
+            query.add(new TermQuery(new Term("name", "zhangsan")), BooleanClause.Occur.MUST);
+            query.add(new TermQuery(new Term("content", "like")), BooleanClause.Occur.MUST_NOT);
+            TopDocs tds = searcher.search(query, num);
+            System.out.println("一共查询了："+ tds.totalHits);
+            for (ScoreDoc sd : tds.scoreDocs) {
+                Document doc = searcher.doc(sd.doc);
+                System.out.println(doc.get("id") +"----------------"+ "[" +doc.get("email")+ "]===>" + doc.get("id") +
+                        doc.get("attach") + "," + doc.get("date"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     // 日期的初始化
     private void setDate() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

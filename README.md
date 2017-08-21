@@ -142,7 +142,7 @@
                         doc.get("attach") + "," + doc.get("date"));
             }
         8.2、其他搜索Query
-            8.2.1、TermRangeQuery
+            8.2.1、TermRangeQuery（范围搜索）
                 try {
                     IndexSearcher searcher = getSearcher();
                     // field表示根据哪个字段查询，start表示开始字符，end表示结束字符，
@@ -159,7 +159,7 @@
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            8.2.2、NumericRange
+            8.2.2、NumericRange（数字搜索）
                 try {
                     IndexSearcher searcher = getSearcher();
                     **Query query = NumericRangeQuery.newIntRange(field, start, end, true, true);**
@@ -174,9 +174,25 @@
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            8.2.3、PrefixQuery
-            8.2.4、WildcardQuery
+            8.2.3、PrefixQuery（前缀搜索）
+                IndexSearcher searcher = getSearcher();
+                // 此时value的是通过前缀来匹配的
+                **Query query = new PrefixQuery(new Term(field, value));**
+                TopDocs tds = searcher.search(query, num);
+            8.2.4、WildcardQuery（通配符搜索）
+                IndexSearcher searcher = getSearcher();
+                // 在传入的value中可以使用通配符*和?,其中？表示匹配一个字符，*表示匹配人一个字符
+                Query query = new WildcardQuery(new Term(field, value));
+                TopDocs tds = searcher.search(query, num);
             8.2.5、BooleanQuery
+                *可以连接多个条件
+                Occur.MUST 表示必须的、Occur.SHOULD 不是可有可无、Occur.MUST_NOT
+                IndexSearcher searcher = getSearcher();
+                BooleanQuery query = new BooleanQuery();
+                // 下面两个就是两个条件
+                query.add(new TermQuery(new Term("name", "zhangsan")), BooleanClause.Occur.MUST);
+                query.add(new TermQuery(new Term("content", "like")), BooleanClause.Occur.MUST);
+                TopDocs tds = searcher.search(query, num);
             8.2.6、phraseQuery
             8.2.7、FuzzyQuery
         8.3、Queryparser

@@ -40,4 +40,22 @@ public class TestSearcher {
     public void  testSearchByNumRange() {
         searcherUtil.searchByNumricRange("attach",2,10,5);
     }
+
+    @Test
+    public void  testSearchByPrefix() {
+        searcherUtil.searchByPrefix("content", "s", 5);
+    }
+
+    @Test
+    public void  testSearchByWildcard() {
+        // 匹配j开头并且后面跟三个字符的
+        //searcherUtil.searchByWildcard("name", "j???", 5);
+        // 匹配以@jky.com结尾的字符
+        searcherUtil.searchByWildcard("email", "*@jky.com", 5);
+    }
+
+    @Test
+    public void  testSearchByBoolean() {
+        searcherUtil.searchByBoolean(10);
+    }
 }
