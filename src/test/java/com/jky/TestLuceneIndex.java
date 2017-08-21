@@ -33,6 +33,11 @@ public class TestLuceneIndex {
     }
 
     @Test
+    public void testDelete01() {
+        indexUtil.delete01();
+    }
+
+    @Test
     public void testUnDelete() {
         indexUtil.undelete();
     }
@@ -50,5 +55,23 @@ public class TestLuceneIndex {
     @Test
     public void testUpdate() {
         indexUtil.update();
+    }
+
+    @Test
+    public void testSearch() {
+        indexUtil.search();
+    }
+
+    @Test
+    public void testSearch01() {
+        for (int i = 0; i < 5; i++) {
+            indexUtil.search01();
+            System.out.println("------------------------------");
+            try {
+                Thread.sleep(10000);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

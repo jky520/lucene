@@ -8,30 +8,23 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * lucene创建索引的工具类
+ * lucene创建为searcher准备的索引工具类
  *
  * Created by DT人 on 2017/8/18 19:14.
  */
-@Component
-public class IndexUtil {
+public class IndexUtil2 {
 
     private String[] ids = {"1", "2", "3", "4", "5", "6"};
     private String[] emails = {"aa@jky.com","bb@jky.com","cc@jky.com","jky1988@qq.com","jky818@163.com","jwj1998@163.com"};
@@ -56,35 +49,14 @@ public class IndexUtil {
     public Directory directory = null;
 
     private Map<String, Float> scores = new HashMap<String, Float>();
-    private static IndexReader reader = null;// 在外面定义一个IndexReader，在构造函数就加载（这是标准的写法）
 
-    public IndexUtil(){
-        try {
-            setDate();
-            scores.put("jky.com", 2.0f); // 邮箱以结尾jky.com
-            scores.put("163.com",1.5f);
-            directory = FSDirectory.open(new File("D:/lucene/index02")); //存到硬盘中
-            reader = IndexReader.open(directory, false); // 默认只读为true,设置为false
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public IndexUtil2(){
+        setDate();
+        scores.put("jky.com", 2.0f); // 邮箱以结尾jky.com
+        scores.put("163.com",1.5f);
+        directory = new RAMDirectory(); // 存到内存中
     }
 
-    public IndexSearcher getSearcher() {
-        try{
-            if(reader == null) {
-                reader = IndexReader.open(directory, false);
-            } else {
-                IndexReader ir = IndexReader.openIfChanged(reader);
-                reader.close(); // 先关掉旧的
-                if(ir != null) reader = ir; // 创建新的
-            }
-            return new IndexSearcher(reader);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     // 日期的初始化
     private void setDate() {
@@ -125,27 +97,6 @@ public class IndexUtil {
         } finally {
             try {
                 if(writer != null) { writer.close(); }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * 恢复删除数据方法
-     */
-    public void undelete() {
-        // 使用IndexReader进行恢复
-        IndexReader reader = null;
-        try {
-            // 恢复时，必须把IndexReader的只读设置为false
-            reader = IndexReader.open(directory, false);
-            reader.undeleteAll();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if(reader != null) { reader.close(); }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -218,18 +169,6 @@ public class IndexUtil {
     }
 
     /**
-     * 通过read删除文档方法
-     */
-    public void delete01() {
-        try {
-            reader.deleteDocuments(new Term("id", "1"));
-            // reader.close(); // 只有close才提交
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * 查询方法
      */
     public void query() {
@@ -291,38 +230,4 @@ public class IndexUtil {
         }
     }
 
-    public void search() {
-        try {
-            IndexReader reader = IndexReader.open(directory);
-            IndexSearcher searcher = new IndexSearcher(reader);
-            TermQuery query = new TermQuery(new Term("content", "like"));
-            TopDocs topDocs = searcher.search(query, 10);
-            for(ScoreDoc sd : topDocs.scoreDocs) {
-                Document doc = searcher.doc(sd.doc);
-                System.out.println("(" +sd.doc+ ")" + "-" + doc.getBoost() + "-" +
-                        doc.get("name") + "[" +doc.get("email")+ "]===>" + doc.get("id") +
-                        doc.get("attach") + "," + doc.get("date"));
-            }
-            reader.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void search01() {
-        try {
-            IndexSearcher searcher = getSearcher(); // 在此调用getSearcher();
-            TermQuery query = new TermQuery(new Term("content", "like"));
-            TopDocs topDocs = searcher.search(query, 10);
-            for(ScoreDoc sd : topDocs.scoreDocs) {
-                Document doc = searcher.doc(sd.doc);
-                System.out.println("(" +sd.doc+ ")" + "-" + doc.getBoost() + "-" +
-                        doc.get("name") + "[" +doc.get("email")+ "]===>" + doc.get("id") +
-                        doc.get("attach") + "," + doc.get("date"));
-            }
-            searcher.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 }
