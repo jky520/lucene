@@ -341,30 +341,34 @@
             // 使用的分词的类型的信息
             TypeAttribute ta = stream.addAttribute(TypeAttribute.class);
         9.3、自定义分词器
-            public final class MyStopAnalyzer extends Analyzer {
-                private Set stops;
-                public MyStopAnalyzer(String[] sws) {
-                    // StopAnalyzer.ENGLISH_STOP_WORDS_SET 可以查看停用词
-                    // System.out.println(StopAnalyzer.ENGLISH_STOP_WORDS_SET);
-                    // 会自动将字符串数组转换为Set
-                    stops = StopFilter.makeStopSet(Version.LUCENE_35, sws, true);
-                    // 将原有的停用词加入到现在的停用词里来
-                    stops.addAll(StopAnalyzer.ENGLISH_STOP_WORDS_SET);
-                }
-            
-                public MyStopAnalyzer() {
-                    // 获取原来的停用词
-                    stops = StopAnalyzer.ENGLISH_STOP_WORDS_SET;
-                }
-                @Override
-                public final TokenStream tokenStream(String fieldName, Reader reader) {
-                    // 为分词器设置过滤链和Tokenizer
-                    return new StopFilter(Version.LUCENE_35,
-                            new LowerCaseFilter(Version.LUCENE_35,
-                                    new LetterTokenizer(Version.LUCENE_35, reader)), stops);
-                }
-            }
             9.3.1、自定义Stop分词器
+                public final class MyStopAnalyzer extends Analyzer {
+                    private Set stops;
+                    public MyStopAnalyzer(String[] sws) {
+                        // StopAnalyzer.ENGLISH_STOP_WORDS_SET 可以查看停用词
+                        // System.out.println(StopAnalyzer.ENGLISH_STOP_WORDS_SET);
+                        // 会自动将字符串数组转换为Set
+                        stops = StopFilter.makeStopSet(Version.LUCENE_35, sws, true);
+                        // 将原有的停用词加入到现在的停用词里来
+                        stops.addAll(StopAnalyzer.ENGLISH_STOP_WORDS_SET);
+                    }
+                
+                    public MyStopAnalyzer() {
+                        // 获取原来的停用词
+                        stops = StopAnalyzer.ENGLISH_STOP_WORDS_SET;
+                    }
+                    @Override
+                    public final TokenStream tokenStream(String fieldName, Reader reader) {
+                        // 为分词器设置过滤链和Tokenizer
+                        return new StopFilter(Version.LUCENE_35,
+                                new LowerCaseFilter(Version.LUCENE_35,
+                                        new LetterTokenizer(Version.LUCENE_35, reader)), stops);
+                    }
+                }
+            9.3.2、中文分词器
+                mmseg:使用搜狗的词库
+                1、导入jar(两个包：1、带有dic的，2、是不带dic的)，如果导入不带dic的得自己指定词库位置
+                2、创建的时候使用MMSegAnalyzer分词器
             
     last、lucene的调试工具lukeall
         lucene是什么版本就要下对应的版本，比如lucene3.5.0就需要下载lukeall-3.5.0.jar

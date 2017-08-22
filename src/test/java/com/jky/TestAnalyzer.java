@@ -42,11 +42,14 @@ public class TestAnalyzer {
         Analyzer a2 = new StopAnalyzer(Version.LUCENE_35);
         Analyzer a3 = new SimpleAnalyzer(Version.LUCENE_35);
         Analyzer a4 = new WhitespaceAnalyzer(Version.LUCENE_35);
+        //Analyzer a5 = new MMSegAnalyzer("词库文件的路径");
+        //Analyzer a5 = new MMSegAnalyzer();
         String txt = "我来自中国贵阳南明区华信智原";
         AnalyzerUtil.displayToken(txt, a1);
         AnalyzerUtil.displayToken(txt, a2);
         AnalyzerUtil.displayToken(txt, a3);
         AnalyzerUtil.displayToken(txt, a4);
+        //AnalyzerUtil.displayToken(txt, a5);
     }
 
     @Test
