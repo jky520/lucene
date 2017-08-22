@@ -73,6 +73,28 @@ public class SearcherUtil {
     }
 
     /**
+     * 获取searcher的方法
+     * @return
+     */
+    public IndexSearcher getSearcher(Directory directory) {
+        try {
+            if(reader == null) {
+                reader = IndexReader.open(directory);
+            } else {
+                IndexReader ir = IndexReader.openIfChanged(reader);
+                if(ir != null) {
+                    reader.close();
+                    reader = ir;
+                }
+            }
+            return new IndexSearcher(reader);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * 精确匹配查询方法
      * @param field
      * @param name
@@ -282,6 +304,95 @@ public class SearcherUtil {
                 Document doc = searcher.doc(sd.doc);
                 System.out.println(doc.get("id") +"----------------"+ "[" +doc.get("email")+ "]===>" + doc.get("id") +
                         doc.get("attach") + "," + doc.get("date"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 索引查询分页方法（再查询）
+     * @param query
+     * @param pageIndex
+     * @param pageSize
+     */
+    public void searchPage(String query, int pageIndex, int pageSize) {
+        try {
+            Directory directory = FileIndexUtil.getDirectory();
+            IndexSearcher searcher = getSearcher(directory);
+            QueryParser parser = new QueryParser(Version.LUCENE_35, "content", new StandardAnalyzer(Version.LUCENE_35));
+            Query q = parser.parse(query);
+            TopDocs topDocs = searcher.search(q, 500);
+            ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+            // 每一次取出所有的数据，从这些数据中再进行查询
+            int start = (pageIndex - 1) * pageSize;
+            int end = pageIndex * pageSize;
+            for(int i = start; i < end; i++) {
+                Document doc = searcher.doc(scoreDocs[i].doc);
+                System.out.println(scoreDocs[i].doc +":"+ doc.get("path") + "------->" + doc.get("filename"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 没有分页的查询方法
+     * @param query
+     */
+    public void searchNoPage(String query) {
+        try {
+            Directory directory = FileIndexUtil.getDirectory();
+            IndexSearcher searcher = getSearcher(directory);
+            QueryParser parser = new QueryParser(Version.LUCENE_35, "content", new StandardAnalyzer(Version.LUCENE_35));
+            Query q = parser.parse(query);
+            TopDocs topDocs = searcher.search(q, 100);
+            ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+            for(int i = 0; i < scoreDocs.length; i++) {
+                Document doc = searcher.doc(scoreDocs[i].doc);
+                System.out.println(scoreDocs[i].doc +":"+ doc.get("path") + "------->" + doc.get("filename"));
+            }
+            searcher.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 根据页码和分页大小获取上一次的最后一次ScoreDoc
+     * @param pageIndex
+     * @param pageSize
+     * @param query
+     * @param searcher
+     * @return
+     */
+    private ScoreDoc getLastScoreDoc(int pageIndex, int pageSize, Query query, IndexSearcher searcher) {
+        try {
+            if(pageIndex == 1) return null; // 如果是第一页就返回空
+            int num = pageSize * (pageIndex - 1); // 否则获取上一页的数量
+            TopDocs topDocs = searcher.search(query, num);
+            return topDocs.scoreDocs[num-1];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void searchPageByAfter(String query, int pageIndex, int pageSize) {
+        try {
+            Directory directory = FileIndexUtil.getDirectory();
+            IndexSearcher searcher = getSearcher(directory);
+            QueryParser parser = new QueryParser(Version.LUCENE_35, "content", new StandardAnalyzer(Version.LUCENE_35));
+            Query q = parser.parse(query);
+            // 获取上一页的最后一个元素
+            ScoreDoc lastSd = getLastScoreDoc(pageIndex, pageSize, q, searcher);
+            // 通过最后一个元素搜索下一页的pageSize个元素
+            TopDocs topDocs = searcher.searchAfter(lastSd, q, pageSize);
+            for(ScoreDoc sd : topDocs.scoreDocs) {
+                Document doc = searcher.doc(sd.doc);
+                System.out.println(sd.doc +":"+ doc.get("path") + "------->" + doc.get("filename"));
             }
             searcher.close();
         } catch (Exception e) {

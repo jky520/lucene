@@ -212,10 +212,159 @@
                 FuzzyQuery query = new FuzzyQuery(new Term(field, value),0.4f, 0);
                 TopDocs tds = searcher.search(query, num);
         8.3、Queryparser
-            8.3.1、指定项查找
-            8.3.1、指定范围查找
-            8.3.1、指定数字和日期查找
-            8.3.1、前缀查找
-            8.3.1、什么查询？
+            表达式                         表达式说明
+            Mike                           默认域包含mike
+            Mike jetty                
+            Mike OR jetty                  默认域包含mike或者join
+            +mike +address:guiyang
+            Mike AND address:guiyang       默认域即使mike并且adress是guiyang
+            id:2                           id域值为2
+            Addresss:guiyang -desc:she
+            Addresss:guiyang AND NOT
+            desc:she                       Address是guiyang并且desc不是she
+            (mike OR jetty) AND 
+            address:guiyang                默认域是mike或者jetty并且address是guiyang
+            Desc:"she like"                Desc域是she like
+            desc:"happy girl"~5            查找happy和girl之间距离小于5的文档
+            j*                             默认域是j开头
+            
+            8.3.1、创建QueryParser
+                // 创建QueryParse的对象,默认的搜素域是content,可以修改
+                QueryParser parser = new QueryParser(Version.LUCENE_35, "content", new StandardAnalyzer(Version.LUCENE_35));
+                // 改变空格的默认操作符变成AND，表示既有也有
+                // parser.setDefaultOperator(QueryParser.Operator.AND);
+                // 开启第一字符的通配符，默认是关闭的
+                parser.setAllowLeadingWildcard(true);
+            8.3.2、各种匹配方式
+                // 搜索的content中包含有like的
+                Query query = parser.parse("like");
+                // 有football或者basketball的，空格默认就是OR
+                query = parser.parse("football basketball");
+                // 这种方式可以改变搜索域name的值为like
+                //query = parser.parse("name:like");
+                // 同样可以用通配符*和?进行匹配
+                query = parser.parse("email:j*");
+                // 匹配name中没有make，但是content中必须有football,+和-要放到域说明的前面
+                // query = parser.parse("- name:make + football");
+                // 匹配id的值1-3的闭区间，其中TO必须是大写的
+                // query = parser.parse("id:[1 TO 3]");
+                // 匹配id的值1-3的开区间
+                // query = parser.parse("id:{1 TO 3}");
+                // 短语匹配，完全匹配 i like basketball
+                //query = parser.parse("\"i like basketball\"");
+                // 匹配i和football之一即可
+                query = parser.parse("\"i basketball\"~1");
+                // 模糊查询
+                query = parser.parse("name:make~");
+        8.4、分页查询
+            8.4.1、再查询
+            public void searchPage(String query, int pageIndex, int pageSize) {
+                try {
+                    Directory directory = FileIndexUtil.getDirectory();
+                    IndexSearcher searcher = getSearcher(directory);
+                    QueryParser parser = new QueryParser(Version.LUCENE_35, "content", new StandardAnalyzer(Version.LUCENE_35));
+                    Query q = parser.parse(query);
+                    TopDocs topDocs = searcher.search(q, 500);
+                    ScoreDoc[] scoreDocs = topDocs.scoreDocs;
+                    // 每一次取出所有的数据，从这些数据中再进行查询
+                    int start = (pageIndex - 1) * pageSize;
+                    int end = pageIndex * pageSize;
+                    for(int i = start; i < end; i++) {
+                        Document doc = searcher.doc(scoreDocs[i].doc);
+                        System.out.println(scoreDocs[i].doc +":"+ doc.get("path") + "------->" + doc.get("filename"));
+                    }
+                    searcher.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            8.4.2、searchAfter（3.5之后才出现的）
+                 private ScoreDoc getLastScoreDoc(int pageIndex, int pageSize, Query query, IndexSearcher searcher) {
+                    try {
+                        if(pageIndex == 1) return null; // 如果是第一页就返回空
+                        int num = pageSize * (pageIndex - 1); // 否则获取上一页的数量
+                        TopDocs topDocs = searcher.search(query, num);
+                        return topDocs.scoreDocs[num-1];
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            
+                public void searchPageByAfter(String query, int pageIndex, int pageSize) {
+                    try {
+                        Directory directory = FileIndexUtil.getDirectory();
+                        IndexSearcher searcher = getSearcher(directory);
+                        QueryParser parser = new QueryParser(Version.LUCENE_35, "content", new StandardAnalyzer(Version.LUCENE_35));
+                        Query q = parser.parse(query);
+                        // 获取上一页的最后一个元素
+                        ScoreDoc lastSd = getLastScoreDoc(pageIndex, pageSize, q, searcher);
+                        // 通过最后一个元素搜索下一页的pageSize个元素
+                        TopDocs topDocs = searcher.searchAfter(lastSd, q, pageSize);
+                        for(ScoreDoc sd : topDocs.scoreDocs) {
+                            Document doc = searcher.doc(sd.doc);
+                            System.out.println(sd.doc +":"+ doc.get("path") + "------->" + doc.get("filename"));
+                        }
+                        searcher.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+    九、分词
+        9.1、分词器的核心类
+            9.1.1、Analyzer
+                Analyzer的四大类分词器：SimpleAnalyzer、StopAnalyzer、WhitespaceAnlyzer、StandarAnalyzer
+            9.1.2、TokenStream（存放的是一组数据）
+                分词器做好处理之后得到的一个流，这个流中存储了分词的各种信息，
+                可以通过TokenStream有效的获取到分词单元信息。
+                生成的流程：Reader->Tokenler->TokenFilter->TokenFilter->TokenStream
+                这个流中所需要存储的数据：
+                CharAttributeTerm:保存相应的词汇
+                OffSetTerm:保存各个词汇之间的偏移量
+                PositionInerTerm:保存词与词之间的位置增量
+            9.1.3、Tokennizer(将一组数据划分不同的语汇单元)
+                主要负责接收字符流Reader,将Reader进行分词操作。有如下一些实现类：
+                KeyWordTokenier、StandardTokennizer、CharTokenizer、WhitespaceTokenizer
+                LetterTokenizer、LowerCaseTokenizer
+            9.1.4、TokenFilter
+                将分词的语汇单元，进行各种各样的过滤。主要有如下的过滤类：
+                CachingTokenFilter、LengthFilter、TeeSinkTokenFilter、PorterStemFilter
+                StandardFilter、LowerCaseFilter、StopFilter、ASCIIFoldingFilter
+        9.2、Attribute
+            TokenStream stream = analyzer.tokenStream("content", new StringReader(str));
+            // 位置增量的属性，存储语汇单元之间的距离
+            PositionIncrementAttribute pia = stream.addAttribute(PositionIncrementAttribute.class);
+            // 每个语汇单元的位置偏移量
+            OffsetAttribute oa = stream.addAttribute(OffsetAttribute.class);
+            // 存储每一个语汇单元的信息（也就是分词单元的信息）
+            CharTermAttribute cta = stream.addAttribute(CharTermAttribute.class);
+            // 使用的分词的类型的信息
+            TypeAttribute ta = stream.addAttribute(TypeAttribute.class);
+        9.3、自定义分词器
+            public final class MyStopAnalyzer extends Analyzer {
+                private Set stops;
+                public MyStopAnalyzer(String[] sws) {
+                    // StopAnalyzer.ENGLISH_STOP_WORDS_SET 可以查看停用词
+                    // System.out.println(StopAnalyzer.ENGLISH_STOP_WORDS_SET);
+                    // 会自动将字符串数组转换为Set
+                    stops = StopFilter.makeStopSet(Version.LUCENE_35, sws, true);
+                    // 将原有的停用词加入到现在的停用词里来
+                    stops.addAll(StopAnalyzer.ENGLISH_STOP_WORDS_SET);
+                }
+            
+                public MyStopAnalyzer() {
+                    // 获取原来的停用词
+                    stops = StopAnalyzer.ENGLISH_STOP_WORDS_SET;
+                }
+                @Override
+                public final TokenStream tokenStream(String fieldName, Reader reader) {
+                    // 为分词器设置过滤链和Tokenizer
+                    return new StopFilter(Version.LUCENE_35,
+                            new LowerCaseFilter(Version.LUCENE_35,
+                                    new LetterTokenizer(Version.LUCENE_35, reader)), stops);
+                }
+            }
+            9.3.1、自定义Stop分词器
+            
     last、lucene的调试工具lukeall
         lucene是什么版本就要下对应的版本，比如lucene3.5.0就需要下载lukeall-3.5.0.jar

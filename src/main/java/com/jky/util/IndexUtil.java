@@ -63,7 +63,7 @@ public class IndexUtil {
             setDate();
             scores.put("jky.com", 2.0f); // 邮箱以结尾jky.com
             scores.put("163.com",1.5f);
-            directory = FSDirectory.open(new File("C:/lucene/index02")); //存到硬盘中
+            directory = FSDirectory.open(new File("D:/lucene/index02")); //存到硬盘中
             reader = IndexReader.open(directory, false); // 默认只读为true,设置为false
         } catch (Exception e) {
             e.printStackTrace();
