@@ -369,6 +369,9 @@
                 mmseg:使用搜狗的词库
                 1、导入jar(两个包：1、带有dic的，2、是不带dic的)，如果导入不带dic的得自己指定词库位置
                 2、创建的时候使用MMSegAnalyzer分词器
-            
+                    // 后面方的是分词库文件的文件目录（中文分词器）
+                    Analyzer a5 = new MMSegAnalyzer(new File(MMsegUtil.WORDS_BASE_PATH));
+                3、简单实现同义词索引
+                    
     last、lucene的调试工具lukeall
         lucene是什么版本就要下对应的版本，比如lucene3.5.0就需要下载lukeall-3.5.0.jar

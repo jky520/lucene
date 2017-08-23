@@ -50,8 +50,8 @@ public class IndexUtil {
     /**
      * 获取文件的基础路径
      */
-    @Value("${lucene.filepath}")
-    private String lucenePath;
+    //@Value("${lucene.filepath}")
+    private String lucenePath = "D:/lucene/";
 
     public Directory directory = null;
 

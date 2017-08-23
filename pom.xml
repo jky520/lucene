@@ -60,26 +60,18 @@
 		</dependency>
 
 		<!-- 中文分词器的jar -->
-		<!--<dependency>
+		<dependency>
 			<groupId>com.chenlb.mmseg4j</groupId>
 			<artifactId>mmseg4j-all</artifactId>
 			<version>1.8.6</version>
-		</dependency>-->
+		</dependency>
 
 		<!-- 中文分词器的jar含有dic -->
-		<dependency>
+		<!--<dependency>
 			<groupId>com.chenlb.mmseg4j</groupId>
 			<artifactId>mmseg4j-core-with-dic</artifactId>
 			<version>1.8.6</version>
-		</dependency>
-
-		<!--<dependency>
-			<groupId>com.chenlb.mmseg4j</groupId>
-			<artifactId>mmseg4j-solr</artifactId>
-			<version>1.9.1</version>
 		</dependency>-->
-
-
 	</dependencies>
 
 	<build>
